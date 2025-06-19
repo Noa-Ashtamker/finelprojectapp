@@ -7,7 +7,7 @@ model = joblib.load('final_model.pkl')
 
 st.set_page_config(page_title="סיווג עבירות בניה", layout="centered")
 st.title("🏗️ סיווג עבירות בניה")
-st.subheader("הזן מאפיינים לצורך חיזוי האם האיתור יהפוך למנהלי")
+st.subheader("הזן מאפיינים לצורך סיווג האם האיתור יהפוך למנהלי")
 
 # 1. מחוז
 district = st.selectbox("מחוז", ["בחר מחוז", "Center", "Jerusalem", "North", "South"])
