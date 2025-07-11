@@ -1,102 +1,96 @@
+
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 
-# Load model
-model = joblib.load('final_model.pkl')
+# טוען את המודל
+model = joblib.load("final_catboost_model.pkl")
 
-st.set_page_config(page_title="סיווג עבירות בניה", layout="centered")
-st.title("🏗️ סיווג עבירות בניהההההה")
-st.subheader("הזן מאפיינים לצורך חיזוי האם האיתור יהפוך למנהלי")
+st.set_page_config(page_title="חיזוי עבירה שנייה", page_icon="🏗", layout="centered")
 
-# פונקציה לאיפוס הטופס
-def reset_form():
-    st.session_state.clear()
+st.title("חיזוי האם האיתור יהפוך לעבירה מנהלית")
 
-# שדות חובה
-def required_select(label, options):
-    selected = st.selectbox(label, ["בחר"] + options, key=label)
-    if selected == "בחר":
-        st.warning(f"אנא בחר ערך עבור {label}")
-        st.stop()
-    return selected
+st.markdown("יש למלא את כל השדות הבאים:")
 
-def required_radio(label, options):
-    selected = st.radio(label, options, key=label)
-    if selected is None:
-        st.warning(f"אנא בחר ערך עבור {label}")
-        st.stop()
-    return selected
+with st.form("prediction_form"):
+    structure_type = st.selectbox("🏗 סוג מבנה ראשון", ["Yes", "No"], index=None, placeholder="בחרי סוג")
+    city_area = st.selectbox("🏙 אזור עירוני", ["Yes", "No"], index=None, placeholder="בחרי אזור")
+    jewish_area = st.selectbox("🕍 אזור יהודי", ["Yes", "No"], index=None, placeholder="בחרי אזור")
+    district = st.selectbox("📍 מחוז", [
+        "District_Center", "District_Jerusalem", "District_North", "District_South"
+    ], index=None, placeholder="בחרי מחוז")
+    land_designation = st.selectbox("🗺 ייעוד קרקע", [
+        "District_land_designation_Agricultural area",
+        "District_land_designation_Beach/ River",
+        "District_land_designation_Industrial & Employment",
+        "District_land_designation_Nature & Conservation",
+        "District_land_designation_Tourism & Commerce",
+        "District_land_designation_Unknown & Other",
+        "District_land_designation_Urban & Residential",
+        "District_land_designation_Village"
+    ], index=None, placeholder="בחרי ייעוד")
 
-# 1. מחוז
-district = required_select("מחוז", ["Center", "Jerusalem", "North", "South"])
+    potential_type = st.selectbox("🧱 אופי איתור ראשון", [
+        'Construction Violation', 'No Permit', 'Construction Completion', 'New Construction Start',
+        'Illegal Use', 'Other Violation', 'Structure Placement', 'Construction Without Permit',
+        'Expansion', 'Illegal Use With Permit', 'Construction Not According To Permit',
+        'New Construction', 'Mobile Structures', 'Use Violation', 'Illegal Use By Plan',
+        'Continued Construction'
+    ], index=None, placeholder="בחרי אופי")
 
-# 2. רבעון איתור ראשון
-q1 = required_select("רבעון איתור ראשון", ["Q1", "Q2", "Q3", "Q4"])
+    submitted = st.form_submit_button("חשב תוצאה")
+    reset = st.form_submit_button("איפוס הטופס")
 
-# 3. אופי איתור ראשון
-types = [
-    "Earthworks and clearance", "Site preparation", "Roads and approaches",
-    "Drilling and foundations", "Base for columns", "Infrastructure",
-    "Skeleton – beginning", "Skeleton – advanced", "Skeleton – general",
-    "new floor", "concrete floor", "main structure", "light structures",
-    "mobile structures", "add-ons and reinforcements", "termination/disposal"
-]
-type1 = required_select("אופי איתור ראשון", types)
-
-# 4. ייעוד קרקע
-land_use = required_select("ייעוד קרקע", [
-    "Agricultural area", "Beach/ River", "Industrial & Employment", 
-    "Nature & Conservation", "Tourism & Commerce", "Village", 
-    "Urban & Residential", "Unknown & Other"
-])
-
-# 5. סוג מבנה ראשון
-structure1 = required_radio("סוג מבנה איתור ראשון", ["קל", "קשיח"])
-
-# 6. אזור עירוני
-city_area = required_radio("אזור עירוני", ["כן", "לא"])
-
-# 7. אזור יהודי
-jewish = required_radio("אזור יהודי", ["כן", "לא"])
-
-# יצירת הקלט למודל
-features = {
-    'District_Center': int(district == 'Center'),
-    'District_Jerusalem': int(district == 'Jerusalem'),
-    'District_North': int(district == 'North'),
-    'District_South': int(district == 'South'),
-    'Quarter_Update_1_Q1': int(q1 == 'Q1'),
-    'Quarter_Update_1_Q2': int(q1 == 'Q2'),
-    'Quarter_Update_1_Q3': int(q1 == 'Q3'),
-    'Quarter_Update_1_Q4': int(q1 == 'Q4'),
-    'Kal_Kashiah_1': int(structure1 == "קשיח"),
-    'city_erea': int(city_area == "כן"),
-    'jewish_e': int(jewish == "כן"),
-}
-
-# פיצ'רים של אופי עבירה ראשון
-for t in types:
-    features[f"Potential_Type_1_Grouped_{t}"] = int(type1 == t)
-
-# ייעוד קרקע
-lands = [
-    "Agricultural area", "Beach/ River", "Industrial & Employment",
-    "Nature & Conservation", "Tourism & Commerce", "Village",
-    "Urban & Residential", "Unknown & Other"
-]
-for land in lands:
-    features[f"District_land_designation_{land}"] = int(land_use == land)
-
-# לחיזוי
-if st.button("חשב תוצאה"):
-    input_df = pd.DataFrame([features])
-    prediction = model.predict(input_df)[0]
-    if prediction == 1:
-        st.success("✔️ האיתור צפוי להפוך למנהלי")
+if submitted:
+    if None in [structure_type, city_area, jewish_area, district, land_designation, potential_type]:
+        st.error("יש למלא את כל השדות לפני החישוב.")
     else:
-        st.info("ℹ️ האיתור יישאר מודיעיני")
+        # יצירת עמודות מקודדות
+        input_dict = {}
 
-# כפתור לאיפוס הטופס
-if st.button("איפוס הטופס"):
-    reset_form()
+        for d in ["District_Center", "District_Jerusalem", "District_North", "District_South"]:
+            input_dict[d] = 1 if d == district else 0
+
+        for l in [
+            "District_land_designation_Agricultural area",
+            "District_land_designation_Beach/ River",
+            "District_land_designation_Industrial & Employment",
+            "District_land_designation_Nature & Conservation",
+            "District_land_designation_Tourism & Commerce",
+            "District_land_designation_Unknown & Other",
+            "District_land_designation_Urban & Residential",
+            "District_land_designation_Village"
+        ]:
+            input_dict[l] = 1 if l == land_designation else 0
+
+        for p in [
+            'Construction Violation', 'No Permit', 'Construction Completion', 'New Construction Start',
+            'Illegal Use', 'Other Violation', 'Structure Placement', 'Construction Without Permit',
+            'Expansion', 'Illegal Use With Permit', 'Construction Not According To Permit',
+            'New Construction', 'Mobile Structures', 'Use Violation', 'Illegal Use By Plan',
+            'Continued Construction'
+        ]:
+            col = "Potential_Type_1_Grouped_" + p
+            input_dict[col] = 1 if p == potential_type else 0
+
+        input_dict["Kal_Kashiah_1"] = 1 if structure_type == "Yes" else 0
+        input_dict["city_erea"] = 1 if city_area == "Yes" else 0
+        input_dict["jewish_e"] = 1 if jewish_area == "Yes" else 0
+
+        # אלו העמודות שלא נכללות בטופס – נשמרות כ-NaN
+        for col in ["Kal_Kashiah_2"] + [f"Potential_Type_2_Grouped_{p}" for p in [
+            'Construction Violation', 'No Permit', 'Construction Completion', 'New Construction Start',
+            'Illegal Use', 'Other Violation', 'Structure Placement', 'Construction Without Permit',
+            'Expansion', 'Illegal Use With Permit', 'Construction Not According To Permit',
+            'New Construction', 'Mobile Structures', 'Use Violation', 'Illegal Use By Plan',
+            'Continued Construction'
+        ]]:
+            input_dict[col] = np.nan
+
+        input_df = pd.DataFrame([input_dict])
+        prediction = model.predict(input_df)[0]
+        result_text = "✔️ האיתור צפוי להפוך לעבירה מנהלית" if prediction == 1 else "ℹ️ האיתור יישאר מודיעיני"
+        st.success(result_text)
+elif reset:
+    st.experimental_rerun()
