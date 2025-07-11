@@ -6,7 +6,7 @@ import joblib
 model = joblib.load('final_model.pkl')
 
 st.set_page_config(page_title="סיווג עבירות בניה", layout="centered")
-st.title("🏗️ סיווג עבירות בניה")
+st.title("🏗️ סיווג עבירות בניהההההה")
 st.subheader("הזן מאפיינים לצורך חיזוי האם האיתור יהפוך למנהלי")
 
 # פונקציה לאיפוס הטופס
