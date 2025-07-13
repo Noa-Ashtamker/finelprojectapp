@@ -33,11 +33,11 @@ binary_options = ["כן", "לא"]
 with st.form(key='classification_form'):
 
     # קלטים עם מפתחות ל-session_state
-    district = st.selectbox("מחוז:", districts, index=None, placeholder="בחר מחוז", key="district")
-    quarter_1 = st.selectbox("רבעון האיתור הראשון:", quarters, index=None, placeholder="בחר רבעון", key="quarter")
-    potential_1 = st.selectbox("אופי האיתור הראשון:", potential_types, index=None, placeholder="בחר אופי איתור", key="potential")
-    land_type = st.selectbox("ייעוד הקרקע במחוז:", land_options, index=None, placeholder="בחר ייעוד קרקע", key="land")
-    structure_type = st.selectbox("סוג המבנה באיתור הראשון:", structures, index=None, placeholder="בחר סוג מבנה", key="structure")
+    district = st.selectbox("מחוז", districts, index=None, placeholder="בחר מחוז", key="district")
+    quarter_1 = st.selectbox("רבעון האיתור", quarters, index=None, placeholder="בחר רבעון", key="quarter")
+    potential_1 = st.selectbox("אופי האיתור", potential_types, index=None, placeholder="בחר אופי איתור", key="potential")
+    land_type = st.selectbox("ייעוד הקרקע", land_options, index=None, placeholder="בחר ייעוד קרקע", key="land")
+    structure_type = st.selectbox("סוג המבנה", structures, index=None, placeholder="בחר סוג מבנה", key="structure")
     city_area = st.selectbox("האם מדובר באזור עירוני?", binary_options, index=None, placeholder="בחר כן / לא", key="city")
     jewish_area = st.selectbox("האם מדובר באזור יהודי?", binary_options, index=None, placeholder="בחר כן / לא", key="jewish")
 
@@ -105,5 +105,5 @@ if submitted:
         # תחזית
         df = pd.DataFrame([data])
         prediction = model.predict(df)[0]
-        result = "✔️ האיתור צפוי להפוך למנהלי" if prediction else "❌ האיתור לא צפוי להפוך למנהלי"
+        result = "!האיתור צפוי להפוך למנהלי" if prediction else "האיתור לא צפוי להפוך למנהלי"
         st.success(result)
