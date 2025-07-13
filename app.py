@@ -5,7 +5,7 @@ import pandas as pd
 import joblib
 
 # טעינת המודל
-model = joblib.load('model.pkl')
+model = joblib.load('final_model.pkl')
 
 st.set_page_config(page_title="סיווג איתור מודיעיני", layout="centered")
 st.title("🏗️ סיווג עבירות בניה")
