@@ -1,108 +1,117 @@
-
-# 🖼️ ממשק משתמש עם Streamlit – סיווג איתור מודיעיני
 import streamlit as st
 import pandas as pd
 import joblib
 
-# טעינת המודל
+# ✅ טעינת המודל
 model = joblib.load('final_model.pkl')
 
+# ✅ הגדרת מצב איפוס
+if "reset_form" not in st.session_state:
+    st.session_state.reset_form = False
+
+# ✅ הגדרת כותרת
 st.set_page_config(page_title="סיווג איתור מודיעיני", layout="centered")
 st.title("🏗️ סיווג עבירות בניה")
 st.subheader("הזן מאפיינים לצורך חיזוי האם האיתור יהפוך למנהלי")
 
-# טופס קלט
+# ✅ רשימות קבועות
+districts = ['בחר...', 'Center', 'Jerusalem', 'North', 'South']
+quarters = ['בחר...', 'Q1', 'Q2', 'Q3', 'Q4']
+potential_types = [
+    "Earthworks and clearance", "Site preparation", "Roads and approaches",
+    "Drilling and foundations", "Base for columns", "Infrastructure",
+    "Skeleton – beginning", "Skeleton – advanced", "Skeleton – general",
+    "new floor", "concrete floor", "main structure", "light structures",
+    "mobile structures", "add-ons and reinforcements", "termination/disposal"
+]
+potentials = ['בחר...'] + potential_types
+land_options = ['בחר...', "Agricultural area", "Beach/ River", "Industrial & Employment",
+                "Nature & Conservation", "Tourism & Commerce", "Village", "Urban & Residential", "Unknown & Other"]
+structures = ['בחר...', 'קל', 'קשיח']
+binary_options = ['בחר...', 'כן', 'לא']
+
+# ✅ טופס
 with st.form(key='classification_form'):
 
-    # 🟦 מאפיין 1 – מחוז
-    district = st.selectbox("מחוז: ", ['בחר...', 'Center', 'Jerusalem', 'North', 'South'])
+    # קלטים עם מפתחות ל-session_state
+    district = st.selectbox("מחוז:", districts,
+                            index=0 if st.session_state.reset_form else None, key="district")
+    quarter_1 = st.selectbox("(רבעון האיתור (הראשון:", quarters,
+                             index=0 if st.session_state.reset_form else None, key="quarter")
+    potential_1 = st.selectbox("(אופי האיתור (הראשון:", potentials,
+                               index=0 if st.session_state.reset_form else None, key="potential")
+    land_type = st.selectbox("ייעוד הקרקע:", land_options,
+                             index=0 if st.session_state.reset_form else None, key="land")
+    structure_type = st.selectbox("(סוג המבנה באיתור (הראשון:", structures,
+                                  index=0 if st.session_state.reset_form else None, key="structure")
+    city_area = st.selectbox("האם מדובר באזור עירוני?", binary_options,
+                             index=0 if st.session_state.reset_form else None, key="city")
+    jewish_area = st.selectbox("האם מדובר באזור יהודי?", binary_options,
+                               index=0 if st.session_state.reset_form else None, key="jewish")
 
-    # 🟨 מאפיין 2 – רבעון איתור ראשון (רבעון שני נקבע לפי זה)
-    quarter_1 = st.selectbox("רבעון האיתור הראשון:", ['בחר...', 'Q1', 'Q2', 'Q3', 'Q4'])
-
-    # 🟩 מאפיין 4 – אופי איתור ראשון (רבעון שני יקבל אותו אוטומטית)
-    potential_types = [
-        "Earthworks and clearance", "Site preparation", "Roads and approaches",
-        "Drilling and foundations", "Base for columns", "Infrastructure",
-        "Skeleton – beginning", "Skeleton – advanced", "Skeleton – general",
-        "new floor", "concrete floor", "main structure", "light structures",
-        "mobile structures", "add-ons and reinforcements", "termination/disposal"
-    ]
-    potential_1 = st.selectbox("אופי האיתור הראשון: ", ['בחר...'] + potential_types)
-
-    # 🟫 מאפיין 6 – ייעוד קרקע
-    land_options = [
-        "Agricultural area", "Beach/ River", "Industrial & Employment", "Nature & Conservation",
-        "Tourism & Commerce", "Village", "Urban & Residential", "Unknown & Other"
-    ]
-    land_type = st.selectbox("ייעוד הקרקע במחוז: ", ['בחר...'] + land_options)
-
-    # 🟥 מאפיין 7 – סוג מבנה איתור ראשון (ושני)
-    structure_type = st.selectbox("סוג המבנה באיתור הראשון: ", ['בחר...', 'קל', 'קשיח'])
-
-    # 🟪 מאפיין 9 – אזור עירוני
-    city_area = st.selectbox("האם מדובר באזור עירוני?", ['בחר...', 'כן', 'לא'])
-
-    # 🟦 מאפיין 10 – אזור יהודי
-    jewish_area = st.selectbox("האם מדובר באזור יהודי?", ['בחר...', 'כן', 'לא'])
-
-    # ⬜ כפתורים
     submitted = st.form_submit_button("חשב תחזית")
     reset = st.form_submit_button("אפס טופס")
 
-# ✅ תנאי לווידוא שכל השדות נבחרו
+# ✅ אפס לאחר ריצה
+if st.session_state.reset_form:
+    st.session_state.reset_form = False
+
+# ✅ כפתור איפוס
+if reset:
+    for key in ["district", "quarter", "potential", "land", "structure", "city", "jewish"]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.session_state.reset_form = True
+    st.rerun()
+
+# ✅ בדיקת תקינות קלט
 valid_input = all([
-    district != 'בחר...',
-    quarter_1 != 'בחר...',
-    potential_1 != 'בחר...',
-    land_type != 'בחר...',
-    structure_type != 'בחר...',
-    city_area != 'בחר...',
-    jewish_area != 'בחר...'
+    st.session_state.district != 'בחר...',
+    st.session_state.quarter != 'בחר...',
+    st.session_state.potential != 'בחר...',
+    st.session_state.land != 'בחר...',
+    st.session_state.structure != 'בחר...',
+    st.session_state.city != 'בחר...',
+    st.session_state.jewish != 'בחר...'
 ])
 
+# ✅ חישוב תחזית
 if submitted:
     if not valid_input:
         st.error("אנא מלא את כל השדות לפני חישוב התחזית.")
     else:
-        # 🧠 יצירת רשומת קלט לפיצ'רים הבינאריים
         data = {}
 
         # מחוז
-        for val in ['Center', 'Jerusalem', 'North', 'South']:
-            data[f'District_{val}'] = int(district == val)
+        for val in districts[1:]:
+            data[f'District_{val}'] = int(st.session_state.district == val)
 
         # רבעון
-        for q in ['Q1', 'Q2', 'Q3', 'Q4']:
-            data[f'Quarter_Update_1_{q}'] = int(quarter_1 == q)
-            data[f'Quarter_Update_2_{q}'] = int(quarter_1 == q)  # זהה
+        for q in quarters[1:]:
+            data[f'Quarter_Update_1_{q}'] = int(st.session_state.quarter == q)
+            data[f'Quarter_Update_2_{q}'] = int(st.session_state.quarter == q)
 
         # אופי עבירה
         for p in potential_types:
             key1 = f'Potential_Type_1_Grouped_{p}'
             key2 = f'Potential_Type_2_Grouped_{p}'
-            data[key1] = int(potential_1 == p)
-            data[key2] = int(potential_1 == p)
+            data[key1] = int(st.session_state.potential == p)
+            data[key2] = int(st.session_state.potential == p)
 
         # ייעוד קרקע
-        for land in land_options:
-            data[f'District_land_designation_{land}'] = int(land_type == land)
+        for land in land_options[1:]:
+            data[f'District_land_designation_{land}'] = int(st.session_state.land == land)
 
         # קשיחות
-        data['Kal_Kashiah_1'] = int(structure_type == 'קשיח')
-        data['Kal_Kashiah_2'] = int(structure_type == 'קשיח')
+        data['Kal_Kashiah_1'] = int(st.session_state.structure == 'קשיח')
+        data['Kal_Kashiah_2'] = int(st.session_state.structure == 'קשיח')
 
-        # אזור עירוני
-        data['city_erea'] = int(city_area == 'כן')
+        # אזור עירוני ויהודי
+        data['city_erea'] = int(st.session_state.city == 'כן')
+        data['jewish_e'] = int(st.session_state.jewish == 'כן')
 
-        # אזור יהודי
-        data['jewish_e'] = int(jewish_area == 'כן')
-
-        # 🧮 הפעלת המודל
-        input_df = pd.DataFrame([data])
-        prediction = model.predict(input_df)[0]
-        result_text = "!האיתור צפוי להפוך למנהלי" if prediction else "האיתור לא צפוי להפוך למנהלי"
-        st.success(result_text)
-
-elif reset:
-    st.rerun()
+        # תחזית
+        df = pd.DataFrame([data])
+        prediction = model.predict(df)[0]
+        result = "!האיתור צפוי להפוך למנהלי" if prediction else "האיתור לא צפוי להפוך למנהלי"
+        st.success(result)
