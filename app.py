@@ -15,10 +15,10 @@ st.subheader("הזן מאפיינים לצורך חיזוי האם האיתור 
 with st.form(key='classification_form'):
 
     # 🟦 מאפיין 1 – מחוז
-    district = st.selectbox("מחוז: *", ['בחר...', 'Center', 'Jerusalem', 'North', 'South'])
+    district = st.selectbox("מחוז: ", ['בחר...', 'Center', 'Jerusalem', 'North', 'South'])
 
     # 🟨 מאפיין 2 – רבעון איתור ראשון (רבעון שני נקבע לפי זה)
-    quarter_1 = st.selectbox("רבעון האיתור הראשון: *", ['בחר...', 'Q1', 'Q2', 'Q3', 'Q4'])
+    quarter_1 = st.selectbox("רבעון האיתור הראשון:", ['בחר...', 'Q1', 'Q2', 'Q3', 'Q4'])
 
     # 🟩 מאפיין 4 – אופי איתור ראשון (רבעון שני יקבל אותו אוטומטית)
     potential_types = [
@@ -28,23 +28,23 @@ with st.form(key='classification_form'):
         "new floor", "concrete floor", "main structure", "light structures",
         "mobile structures", "add-ons and reinforcements", "termination/disposal"
     ]
-    potential_1 = st.selectbox("אופי האיתור הראשון: *", ['בחר...'] + potential_types)
+    potential_1 = st.selectbox("אופי האיתור הראשון: ", ['בחר...'] + potential_types)
 
     # 🟫 מאפיין 6 – ייעוד קרקע
     land_options = [
         "Agricultural area", "Beach/ River", "Industrial & Employment", "Nature & Conservation",
         "Tourism & Commerce", "Village", "Urban & Residential", "Unknown & Other"
     ]
-    land_type = st.selectbox("ייעוד הקרקע במחוז: *", ['בחר...'] + land_options)
+    land_type = st.selectbox("ייעוד הקרקע במחוז: ", ['בחר...'] + land_options)
 
     # 🟥 מאפיין 7 – סוג מבנה איתור ראשון (ושני)
-    structure_type = st.selectbox("סוג המבנה באיתור הראשון: *", ['בחר...', 'קל', 'קשיח'])
+    structure_type = st.selectbox("סוג המבנה באיתור הראשון: ", ['בחר...', 'קל', 'קשיח'])
 
     # 🟪 מאפיין 9 – אזור עירוני
-    city_area = st.selectbox("האם מדובר באזור עירוני? *", ['בחר...', 'כן', 'לא'])
+    city_area = st.selectbox("האם מדובר באזור עירוני?", ['בחר...', 'כן', 'לא'])
 
     # 🟦 מאפיין 10 – אזור יהודי
-    jewish_area = st.selectbox("האם מדובר באזור יהודי? *", ['בחר...', 'כן', 'לא'])
+    jewish_area = st.selectbox("האם מדובר באזור יהודי?", ['בחר...', 'כן', 'לא'])
 
     # ⬜ כפתורים
     submitted = st.form_submit_button("חשב תחזית")
@@ -101,8 +101,8 @@ if submitted:
         # 🧮 הפעלת המודל
         input_df = pd.DataFrame([data])
         prediction = model.predict(input_df)[0]
-        result_text = "✔️ האיתור צפוי להפוך למנהלי" if prediction else "❌ האיתור לא צפוי להפוך למנהלי"
+        result_text = "!האיתור צפוי להפוך למנהלי" if prediction else "האיתור לא צפוי להפוך למנהלי"
         st.success(result_text)
 
 elif reset:
-    st.experimental_rerun()
+    st.rerun()
